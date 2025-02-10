@@ -42,38 +42,45 @@
     
     /* ========================
        アニメーション定義
+       ・各要素の出現、退場、動作のアニメーション
        ======================== */
     
+    /* 上へ浮かび上がるアニメーション */
     @keyframes floatUp {
       0% { transform: translateY(20px); opacity: 0; }
       100% { transform: translateY(0); opacity: 1; }
     }
     .float-up { animation: floatUp 1s forwards; }
     
+    /* 右側からスライドインするアニメーション */
     @keyframes slideInRight {
       0% { transform: translateX(100vw); opacity: 0; }
       100% { transform: translateX(0); opacity: 1; }
     }
     .slide-in-right { animation: slideInRight 0.5s forwards; }
     
+    /* 左側からスライドインするアニメーション */
     @keyframes slideInLeft {
       0% { transform: translateX(-100vw); opacity: 0; }
       100% { transform: translateX(0); opacity: 1; }
     }
     .slide-in { animation: slideInLeft 0.5s forwards; }
     
+    /* 右方向へスライドアウトするアニメーション */
     @keyframes slideOutRight {
       0% { transform: translateX(0); opacity: 1; }
       100% { transform: translateX(100vw); opacity: 0; }
     }
     .slide-out { animation: slideOutRight 0.5s forwards !important; }
     
+    /* 左方向へスライドアウトするアニメーション */
     @keyframes slideOutLeft {
       0% { transform: translateX(0); opacity: 1; }
       100% { transform: translateX(-100vw); opacity: 0; }
     }
     .slide-out-left { animation: slideOutLeft 0.5s forwards !important; }
     
+    /* スタート演出用のアニメーション */
     @keyframes startMotion {
       0% { transform: translateX(-100vw); opacity: 0; }
       40% { transform: translateX(0); opacity: 1; }
@@ -81,6 +88,7 @@
       100% { transform: translateX(100vw); opacity: 0; }
     }
     
+    /* 選択肢が「倒れる」アニメーション */
     @keyframes fallOver {
       0% { transform: rotate(0deg); opacity: 1; }
       100% { transform: rotate(90deg); opacity: 0; }
@@ -95,6 +103,7 @@
     /* ========================
        ボタン・ライン・進捗表示などのスタイル
        ======================== */
+    
     .back-button, .exit-indicator {
       position: absolute;
       top: 20px;
@@ -114,6 +123,7 @@
       animation: slideInLeft 0.5s forwards;
     }
     
+    /* 右上の進捗表示用 */
     #progress-indicator {
       position: absolute;
       top: 20px;
@@ -126,6 +136,7 @@
       opacity: 0;
     }
     
+    /* フェードアウトアニメーション（全体退場用） */
     @keyframes fadeOut {
       from { opacity: 1; }
       to { opacity: 0; }
@@ -134,6 +145,7 @@
       animation: fadeOut 1s forwards;
     }
     
+    /* タイマー用のスタイル */
     .timer-indicator {
       width: 50px;
       height: 50px;
@@ -144,6 +156,7 @@
       font-size: 1.5em;
     }
     
+    /* モード下部テキスト用（現在のフォントサイズは1.2emに設定） */
     .mode-text {
       font-size: 1.2em;
     }
@@ -159,35 +172,40 @@
       height: 100%;
       text-align: center;
     }
+    /* ゲームモード名の位置を少し下に */
     .result-title {
       font-size: 1.5em;
-      margin-top: 80px;
+      margin-top: 80px; /* ここを大きめに */
       opacity: 0;
     }
+    /* 正解数はより大きく */
     .result-correct-count {
       font-size: 3em;
       margin-top: 80px;
       opacity: 0;
     }
     .result-missed {
-      font-size: 1em;
+      font-size: 1em; /* 今は表を作らないので仮配置 */
       position: absolute;
       bottom: 40px;
       width: 100%;
       opacity: 0;
     }
+    /* タイトルに戻るボタンを大きく */
     .return-button {
       position: absolute;
       top: 20px;
       left: 20px;
-      font-size: 3em;
+      font-size: 3em; /* 大きくする */
       opacity: 0;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
+  <!-- 中央のコンテナ。初期メニューなどがここに表示されます。 -->
   <div id="container"></div>
+  
   <script>
     /***********************
      * ユーティリティ関数
@@ -204,15 +222,19 @@
     /***********************
      * グローバル変数
      ***********************/
+    // ゲームモードおよび出題数の設定
     let gameMode = "mode1";
     let numQuestions = 10;
-    let startActive = false;
+    let startActive = false;  // START演出中は true
+    
+    // 正解数カウント用変数
     let correctCount = 0;
     
     /***********************
      * アニメーション終了後の非表示処理
      ***********************/
     document.addEventListener('animationend', function(e) {
+      // fallOverアニメ終了後、要素を完全に非表示
       if (e.animationName === 'fallOver') {
         e.target.style.display = 'none';
       }
@@ -236,12 +258,18 @@
       selectedProblems = shuffle(all).slice(0, numQuestions);
     }
     
+    /***********************
+     * グローバル状態
+     ***********************/
     let currentProblemIndex = 0;
     let choiceActive = false;
     
     const delayInterval = 0.07;
     const initialDelay = 0.3;
     
+    /***********************
+     * ユーティリティ関数：シャッフル
+     ***********************/
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -251,12 +279,13 @@
     }
     
     /***********************
-     * タイトル画面の表示
+     * 初期メニュー画面
      ***********************/
     function initTitleScreen(mode) {
       const container = document.getElementById('container');
       container.innerHTML = "";
       const initialItems = ["通常モード", "発展モード", "設定"];
+      
       initialItems.forEach((text, index) => {
         const div = document.createElement('div');
         div.className = 'item';
@@ -271,6 +300,7 @@
         if (index !== initialItems.length - 1) {
           div.style.marginBottom = '40px';
         }
+        // 各メニュー項目にクリックイベントを設定
         if (text === "通常モード") {
           div.id = 'item1';
           div.addEventListener('click', handleTitleTap);
@@ -283,11 +313,12 @@
         }
         container.appendChild(div);
       });
+      // 正解数カウントをリセット
       correctCount = 0;
     }
     
     /***********************
-     * メニュークリック処理
+     * メニュークリックイベント
      ***********************/
     function handleTitleTap() {
       const container = document.getElementById('container');
@@ -301,6 +332,7 @@
       const totalDelay = (items.length - 1) * delayInterval * 1000 + 500;
       setTimeout(() => {
         container.innerHTML = "";
+        // 新たなタイトルとモード選択肢を表示
         const titleDiv = document.createElement('div');
         titleDiv.className = 'title slide-in';
         titleDiv.textContent = '通常モード';
@@ -316,6 +348,7 @@
           if (index !== newItems.length - 1) {
             div.style.marginBottom = '40px';
           }
+          // それぞれの選択肢に対応するモード設定やイベントを付与
           if (text === "10問出題") {
             gameMode = "mode1";
             numQuestions = 10;
@@ -331,6 +364,7 @@
           }
           container.appendChild(div);
         });
+        // 戻るボタン
         const backButton = document.createElement('div');
         backButton.className = 'back-button slide-in';
         backButton.textContent = '↩︎';
@@ -478,15 +512,415 @@
     }
     
     /***********************
-     * 各モードへの遷移
+     * モードごとの画面遷移処理
      ***********************/
-    function handleExitAll() { /* （mode1）省略：10問出題モード */ }
-    function handleExitAllMode2() { /* （mode2）省略：30問出題モード */ }
-    function handleExitAllMode3() { /* （mode3）省略：100問出題モード */ }
-    function handleExitAllMode4() { /* （mode4）特急30問モード */ }
-    function handleExitAllMode5() { /* （mode5）特急100問モード */ }
-    function handleExitAllMode6() { /* （mode6）超特急30問モード */ }
-    function handleExitAllMode7() { /* （mode7）超特急100問モード */ }
+    function handleExitAll() {
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        // × ボタン
+        const exitIndicator = document.createElement('div');
+        exitIndicator.className = 'exit-indicator slide-in';
+        exitIndicator.textContent = '×';
+        exitIndicator.style.opacity = '1';
+        document.body.appendChild(exitIndicator);
+        addExitIndicatorClick();
+        
+        // 黒いライン
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        // モード名
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        modeText.textContent = '10問出題モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
+    
+    function handleExitAllMode2() {
+      gameMode = "mode2";
+      numQuestions = 30;
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        const exitIndicator = document.createElement('div');
+        exitIndicator.className = 'exit-indicator slide-in';
+        exitIndicator.textContent = '×';
+        exitIndicator.style.opacity = '1';
+        document.body.appendChild(exitIndicator);
+        addExitIndicatorClick();
+        
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        modeText.textContent = '30問出題モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
+    
+    function handleExitAllMode3() {
+      gameMode = "mode3";
+      numQuestions = 100;
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        const exitIndicator = document.createElement('div');
+        exitIndicator.className = 'exit-indicator slide-in';
+        exitIndicator.textContent = '×';
+        exitIndicator.style.opacity = '1';
+        document.body.appendChild(exitIndicator);
+        addExitIndicatorClick();
+        
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        modeText.textContent = '100問出題モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
+    
+    // === ここから文字修正済み ===
+    // 「特急30問モード」
+    function handleExitAllMode4() {
+      gameMode = "mode4";
+      numQuestions = 30;
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        // 変更後の文言
+        modeText.textContent = '特急30問モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
+    
+    // 「特急100問モード」
+    function handleExitAllMode5() {
+      gameMode = "mode5";
+      numQuestions = 100;
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        // 変更後の文言
+        modeText.textContent = '特急100問モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
+    
+    // 「超特急30問モード」
+    function handleExitAllMode6() {
+      gameMode = "mode6";
+      numQuestions = 30;
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        // 変更後の文言
+        modeText.textContent = '超特急30問モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
+    
+    // 「超特急100問モード」
+    function handleExitAllMode7() {
+      gameMode = "mode7";
+      numQuestions = 100;
+      const container = document.getElementById('container');
+      const elements = [];
+      container.querySelectorAll('*').forEach(el => elements.push(el));
+      const backButton = document.querySelector('.back-button');
+      if (backButton) { elements.push(backButton); }
+      elements.forEach(el => {
+        el.style.animationDelay = '0s';
+        el.classList.remove('slide-in', 'slide-in-right', 'float-up');
+        el.classList.add('slide-out');
+      });
+      setTimeout(() => {
+        container.innerHTML = "";
+        if (backButton && backButton.parentElement) {
+          backButton.parentElement.removeChild(backButton);
+        }
+        const linePositions = ["10%", "28%", "46%", "64%"];
+        linePositions.forEach(pos => {
+          const line = document.createElement('div');
+          line.className = 'exit-line slide-in';
+          line.style.bottom = pos;
+          document.body.appendChild(line);
+        });
+        
+        const modeText = document.createElement('div');
+        modeText.className = 'mode-text slide-in';
+        // 変更後の文言
+        modeText.textContent = '超特急100問モード';
+        modeText.style.position = 'absolute';
+        modeText.style.bottom = '20px';
+        modeText.style.width = '100%';
+        modeText.style.textAlign = 'center';
+        document.body.appendChild(modeText);
+        
+        startActive = true;
+        const startText = document.createElement('div');
+        startText.textContent = 'START';
+        startText.style.position = 'absolute';
+        startText.style.top = '103px';
+        startText.style.width = '100%';
+        startText.style.textAlign = 'center';
+        startText.style.fontSize = '3em';
+        startText.style.animation = "startMotion 2s forwards";
+        document.body.appendChild(startText);
+        
+        startText.addEventListener('animationend', function() {
+          startText.remove();
+          startActive = false;
+          showFirstProblem();
+        });
+      }, 500);
+    }
     
     function handleExitAllMode8() {
       gameMode = "mode8";
@@ -513,6 +947,7 @@
           line.style.bottom = pos;
           document.body.appendChild(line);
         });
+        
         const modeText = document.createElement('div');
         modeText.className = 'mode-text slide-in';
         modeText.textContent = 'トンネル超特急モード';
@@ -521,6 +956,7 @@
         modeText.style.width = '100%';
         modeText.style.textAlign = 'center';
         document.body.appendChild(modeText);
+        
         startActive = true;
         const startText = document.createElement('div');
         startText.textContent = 'START';
@@ -531,6 +967,7 @@
         startText.style.fontSize = '3em';
         startText.style.animation = "startMotion 2s forwards";
         document.body.appendChild(startText);
+        
         startText.addEventListener('animationend', function() {
           startText.remove();
           startActive = false;
@@ -540,18 +977,13 @@
     }
     
     /***********************
-     * 問題表示・解答処理
+     * 問題表示
      ***********************/
-    function showFirstProblem() {
-      selectRandomProblems();
-      currentProblemIndex = 0;
-      displayProblem(currentProblemIndex);
-    }
-    
     function displayProblem(index) {
       choiceActive = true;
       const problem = selectedProblems[index];
       
+      // 問題文
       const problemText = document.createElement('div');
       problemText.id = 'problem-text';
       problemText.textContent = problem.question;
@@ -564,6 +996,7 @@
       document.body.appendChild(problemText);
       adjustFontSizeToFit(problemText);
       
+      // 進捗表示
       const progressIndicator = document.createElement('div');
       progressIndicator.id = 'progress-indicator';
       progressIndicator.textContent = `${index + 1} / ${selectedProblems.length}`;
@@ -578,6 +1011,7 @@
       progressIndicator.className = 'slide-in';
       document.body.appendChild(progressIndicator);
       
+      // タイマー生成（mode4～mode8）
       let timerInterval, timerTimeout;
       if (
         gameMode === "mode4" || gameMode === "mode5" ||
@@ -585,23 +1019,13 @@
         gameMode === "mode8"
       ) {
         let initialTime, timerDuration;
-        
         if (gameMode === "mode4" || gameMode === "mode5") {
           initialTime = 5;
           timerDuration = 5000;
-        }
-        else if (gameMode === "mode6" || gameMode === "mode7") {
+        } else {
           initialTime = 3;
           timerDuration = 3000;
         }
-        else if (gameMode === "mode8") {
-          /* ★★★ ここを変更 ★★★
-             - 旧: initialTime = 3, timerDuration = 3000
-             - 新: total 4秒, 2.5秒後に選択肢を表示, 4秒でタイムアウト */
-          initialTime = 4;
-          timerDuration = 4000;
-        }
-        
         const timerIndicator = document.createElement('div');
         timerIndicator.className = 'timer-indicator slide-in';
         timerIndicator.style.position = 'absolute';
@@ -613,8 +1037,15 @@
         let timeLeft = initialTime;
         timerInterval = setInterval(() => {
           timeLeft--;
-          if(timeLeft >= 0) {
+          if(timeLeft > 0) {
             timerIndicator.textContent = timeLeft.toString();
+          }
+          // mode8: 残り1秒で選択肢表示
+          if (gameMode === "mode8" && timeLeft === 1) {
+            const choices = document.querySelectorAll('.choice');
+            choices.forEach(choice => {
+              choice.style.visibility = "visible";
+            });
           }
         }, 1000);
         
@@ -650,6 +1081,7 @@
               nextButton.style.right = '20px';
               nextButton.style.fontSize = '2em';
               nextButton.addEventListener('click', function() {
+                // リザルトへ
                 resultTransition();
               });
               document.body.appendChild(nextButton);
@@ -657,19 +1089,6 @@
           }
           clearInterval(timerInterval);
         }, timerDuration);
-        
-        // ★★★ 「トンネル超特急」だけ、2.5秒後に選択肢を表示 ★★★
-        if (gameMode === "mode8") {
-          setTimeout(() => {
-            // まだ解答受付中の場合のみ可視化
-            if (choiceActive) {
-              const choices = document.querySelectorAll('.choice');
-              choices.forEach(choice => {
-                choice.style.visibility = "visible";
-              });
-            }
-          }, 2500); // 2.5秒後に選択肢表示
-        }
         
         var clearMode4Timer = function() {
           clearTimeout(timerTimeout);
@@ -682,6 +1101,7 @@
         };
       }
       
+      // 選択肢
       const choicesPositions = ["51%", "33%", "15%"];
       const choicesArray = [problem.correct, ...problem.incorrect];
       const shuffledChoices = shuffle(choicesArray.slice());
@@ -694,12 +1114,9 @@
         choiceElem.style.fontSize = '2em';
         choiceElem.style.bottom = choicesPositions[idx];
         choiceElem.className = 'choice slide-in';
-        
-        // ★★ mode8の場合、初期状態で選択肢を非表示
         if(gameMode === "mode8") {
-          choiceElem.style.visibility = "hidden";
+          choiceElem.style.visibility = "hidden"; // mode8は残り1秒まで非表示
         }
-        
         document.body.appendChild(choiceElem);
         adjustFontSizeToFit(choiceElem);
         
@@ -717,6 +1134,7 @@
           }
           
           if (choiceText !== problem.correct) {
+            // 不正解
             if (
               gameMode === "mode4" || gameMode === "mode5" ||
               gameMode === "mode6" || gameMode === "mode7" ||
@@ -804,6 +1222,18 @@
       });
     }
     
+    /***********************
+     * 初回問題表示
+     ***********************/
+    function showFirstProblem() {
+      selectRandomProblems();
+      currentProblemIndex = 0;
+      displayProblem(currentProblemIndex);
+    }
+    
+    /***********************
+     * 次の問題へ
+     ***********************/
     function nextProblem() {
       choiceActive = false;
       const problemElem = document.querySelector('#problem-text');
@@ -838,7 +1268,7 @@
     }
     
     /***********************
-     * リザルト画面処理
+     * リザルト画面
      ***********************/
     function getGameModeName() {
       switch(gameMode) {
@@ -859,30 +1289,35 @@
       resultContainer.className = 'result-container';
       document.body.appendChild(resultContainer);
       
+      // ゲームモード名
       const resultTitle = document.createElement('div');
       resultTitle.className = 'result-title float-up';
       resultTitle.style.animationDelay = '0s';
       resultTitle.textContent = getGameModeName();
       resultContainer.appendChild(resultTitle);
       
+      // 正解数
       const resultCorrect = document.createElement('div');
       resultCorrect.className = 'result-correct-count float-up';
       resultCorrect.style.animationDelay = '0.5s';
       resultCorrect.textContent = `${correctCount} / ${numQuestions}`;
       resultContainer.appendChild(resultCorrect);
       
+      // 間違えた問題一覧（仮）
       const resultMissed = document.createElement('div');
       resultMissed.className = 'result-missed float-up';
       resultMissed.style.animationDelay = '1.0s';
       resultMissed.textContent = "（間違えた問題一覧：仮配置）";
       resultContainer.appendChild(resultMissed);
       
+      // タイトルに戻るボタン（↩︎）
       const returnButton = document.createElement('div');
       returnButton.className = 'return-button float-up';
       returnButton.style.animationDelay = '1.0s';
       returnButton.textContent = '↩︎';
       resultContainer.appendChild(returnButton);
       
+      // クリック時、一斉にフェードアウトして1秒後にタイトルへ
       returnButton.addEventListener('click', () => {
         [resultTitle, resultCorrect, resultMissed, returnButton].forEach(el => {
           el.style.animationDelay = '0s';
@@ -929,10 +1364,12 @@
         modeTexts.forEach(el => el.remove());
         if (exitIndicator) exitIndicator.remove();
         
+        // リザルト画面へ
         showResultScreen();
       }, 500);
     }
     
+    // 最初にタイトル画面を表示
     window.onload = () => {
       initTitleScreen("initial");
     };
